@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<xs:schema
+  targetNamespace="http://example.org/inventory"
+  version="4.1alpha1pre1"
+  xmlns:inv="http://example.org/inventory"
+  elementFormDefault="qualified"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="inventory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="path" type="xs:anyURI"/>
+        <xs:element ref="inv:item" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="item" abstract="true" type="inv:itemType"/>
+
+  <xs:complexType name="itemType" abstract="true">
+    <xs:sequence>
+      <!-- todo: limit path to not have a '/' in it. -->
+      <xs:element name="path" type="xs:anyURI"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="file" substitutionGroup="inv:item">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="inv:itemType">
+          <xs:sequence>
+            <xs:element name="mime-type" type="xs:string"/>
+            <xs:element name="mime-encoding" type="xs:string"/>
+            <xs:element name="xml-well-formed" type="xs:boolean" minOccurs="0"/>
+            <xs:element name="xml-document-element" minOccurs="0">
+              <xs:complexType>
+                <xs:attribute name="namespace" type="xs:anyURI" use="required"/>
+                <xs:attribute name="local-name" type="xs:NCName" use="required"/>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="xml-schema-target-namespace" type="xs:anyURI" minOccurs="0"/>
+            <xs:element name="conformance-target" type="xs:anyURI" minOccurs="0"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="directory" substitutionGroup="inv:item">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="inv:itemType">
+          <xs:sequence>
+            <xs:element ref="inv:item" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
+
