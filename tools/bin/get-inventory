@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-get_conformance_target_uris_xsl=$(cd "$(dirname "$0")"; pwd)/get-conformance-target-uris.xsl
-inventory_xsd=$(cd "$(dirname "$0")"; pwd)/inventory.xsd
+#HELP:COMMAND_NAME: create an XML-formatted inventory of files and folders in a target directory
+#HELP:Options:
 
 . "$HOME"/share/wrtools-core/fail.bash
 . "$HOME"/share/wrtools-core/opt_help.bash
 . "$HOME"/share/wrtools-core/opt_verbose.bash
 . "$HOME"/share/wrtools-core/temp.bash
 
-#HELP:COMMAND_NAME: create an XML-formatted inventory of files and folders in a target directory
-#HELP:Options:
+bin_dir=$(cd "$(dirname "$0")" && pwd)
+share_dir=${bin_dir}/../share/niem-ies-spec
+get_conformance_target_uris_xsl=${share_dir}/get-conformance-target-uris.xsl
+inventory_xsd=${share_dir}/inventory.xsd
 
 #HELP:  --target=$dir | -t $dir: Run inventory on target directory
 unset target
@@ -93,25 +95,25 @@ get_file () {
     printf '%s  <path>' "$indent"
     encode_as_xml <<< "$1"
     printf '</path>\n'
-    mime_type=$(file -r --brief --mime-type "$1")
+    mime_type=$(vrun file -r --brief --mime-type "$1")
     printf '%s  <mime-type>%s</mime-type>\n' "$indent" "$mime_type"
-    printf '%s  <mime-encoding>%s</mime-encoding>\n' "$indent" "$(file -r --brief --mime-encoding "$1")"
+    printf '%s  <mime-encoding>%s</mime-encoding>\n' "$indent" "$(vrun file -r --brief --mime-encoding "$1")"
     if [[ $mime_type = text/xml ]]
     then
       if xmllint --noout "$1" > /dev/null 2>&1
       then
         printf '%s  <xml-well-formed>true</xml-well-formed>\n' "$indent"
-        namespace=$(xmllint --xpath 'namespace-uri(/*)' "$1")
-        local_name=$(xmllint --xpath 'local-name(/*)' "$1")
+        namespace=$(vrun xmllint --xpath 'namespace-uri(/*)' "$1")
+        local_name=$(vrun xmllint --xpath 'local-name(/*)' "$1")
         printf '%s  <xml-document-element\n' "$indent"
         printf '%s    namespace="%s"\n' "$indent" "$namespace"
         printf '%s    local-name="%s"/>\n' "$indent" "$local_name"
         if [[ $namespace = "http://www.w3.org/2001/XMLSchema" && $local_name = "schema" ]]
         then
-          target_namespace=$(xmllint --xpath 'string(/*/@targetNamespace)' "$1")
+          target_namespace=$(vrun xmllint --xpath 'string(/*/@targetNamespace)' "$1")
           printf '%s  <xml-schema-target-namespace>%s</xml-schema-target-namespace>\n' "$indent" "$target_namespace"
         fi
-        xsltproc --novalid --nodtdattr --nonet --nowrite "$get_conformance_target_uris_xsl" "$1" | sed -e "s/^/${indent}  <conformance-target>/" -e "s/\$/<\/conformance-target>/"
+        vrun xsltproc --novalid --nodtdattr --nonet --nowrite "$get_conformance_target_uris_xsl" "$1" | sed -e "s/^/${indent}  <conformance-target>/" -e "s/\$/<\/conformance-target>/"
       else
           printf '%s  <xml-well-formed>false</xml-well-formed>\n' "$indent"
       fi
@@ -137,7 +139,7 @@ get_directory_contents () {
 cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory xmlns="http://example.org/inventory">
-  <path>$target_dir</path>
+  <path>$target</path>
 EOF
 
 indent="  "
