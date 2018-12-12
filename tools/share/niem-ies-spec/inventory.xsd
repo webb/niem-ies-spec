@@ -51,6 +51,11 @@
       <xs:complexContent>
         <xs:extension base="inv:itemType">
           <xs:sequence>
+            <xs:element name="contents-omitted" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:attribute name="reason" type="xs:string" use="required"/>
+              </xs:complexType>
+            </xs:element>
             <xs:element ref="inv:item" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:extension>

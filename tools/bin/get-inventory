@@ -80,11 +80,20 @@ get_directory () (
     printf '%s  <path>' "$indent"
     encode_as_xml <<< "$1"
     printf '</path>\n'
-    (
-        cd "$1" || fail_assert failed to cd to "\"$1\"" from "\"$PWD\""
-        indent="$indent  "
-        get_directory_contents
-    )
+
+    get_contents=true
+    if is_inside_git_dir=$(git -C "$1" rev-parse --is-inside-git-dir 2>/dev/null)
+    then if [[ $is_inside_git_dir = true ]]
+         then printf '%s  <contents-omitted reason="directory is inside git dir"/>\n' "$indent"
+              get_contents=false
+         fi
+    fi
+
+    if [[ $get_contents = true ]]
+    then ( cd "$1" || fail_assert failed to cd to "\"$1\"" from "\"$PWD\""
+           indent="$indent  "
+           get_directory_contents )
+    fi
 
     printf '%s</directory>\n' "$indent"
 )
